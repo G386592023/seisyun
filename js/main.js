@@ -2,7 +2,7 @@ const canvas = document.querySelector("canvas");
 const ctx = canvas.getContext("2d");
 const wid = 500;
 const hei = 300;
-const lw = 3;
+const lw = 1;
 
 function drawRect(x, y, w, h, col, stroke=false){
     ctx.fillStyle = col;
@@ -21,6 +21,8 @@ function init(){
 }
 
 function loop(){
+    drawRect(0, 0, wid, hei, "rgb(90, 122, 150)");
+
     requestAnimationFrame(loop)
 }
 
