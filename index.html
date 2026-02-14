@@ -1,12 +1,289 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-    <meta charset="UTF-8">
-    <title>オオモモアケ</title>
-    <link rel="stylesheet" href="css/seisyun.css">
+<meta charset="UTF-8">
+<title>オオモモアケ</title>
+
+<style>
+body{
+    margin:0;
+    background:#222;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    height:100vh;
+}
+
+#gameWrapper{
+    width:80vw;
+    height:calc(80vw * 0.6); /* 300/500 = 0.6 */
+    display:flex;
+    /* justify-content:center;
+    align-items:center; */
+    overflow:hidden;
+}
+
+#gameContainer{
+    width:500px;
+    height:300px;
+    position:relative;
+    transform-origin:top left;
+    /* background:black; */
+}
+
+#background{
+    position:absolute;
+    width:5000px;
+    height:300px;
+    background:url("./img/background.png") no-repeat;
+    background-size:5000px 300px;
+    left:0;
+    top:0;
+}
+
+#player{
+    position:absolute;
+    width:100px;
+    height:150px;
+    left:50px;
+    top:150px;
+    background-size:cover;
+}
+
+.obstacle{
+    position:absolute;
+    width:80px;
+    height:80px;
+    background:url("./img/obstacle.png") no-repeat;
+    background-size:contain;
+}
+
+.screen{
+    position:absolute;
+    width:100%;
+    height:100%;
+    background:rgba(0,0,0,0.7);
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    flex-direction:column;
+    color:white;
+    z-index:10;
+}
+
+button{
+    padding:10px 20px;
+    font-size:18px;
+    cursor:pointer;
+}
+</style>
 </head>
+
 <body>
-    <canvas></canvas>
-    <script src="js/main.js"></script>
+<div id="gameWrapper">
+    <div id="gameContainer">
+
+        <div id="background"></div>
+        <div id="player"></div>
+
+        <!-- スタート画面 -->
+        <div id="startScreen" class="screen">
+            <h1>START</h1>
+            <button onclick="startGame()">Start</button>
+        </div>
+
+        <!-- ゲームオーバー -->
+        <div id="gameOverScreen" class="screen" style="display:none;">
+            <h1>GAME OVER</h1>
+            <button onclick="startGame()">Replay</button>
+        </div>
+
+        <!-- クリア -->
+        <div id="clearScreen" class="screen" style="display:none;">
+            <h1>CLEAR!</h1>
+            <button onclick="startGame()">Replay</button>
+        </div>
+
+    </div>
+</div>
+
+<script>
+const player = document.getElementById("player");
+const background = document.getElementById("background");
+const gameContainer = document.getElementById("gameContainer");
+
+const startScreen = document.getElementById("startScreen");
+const gameOverScreen = document.getElementById("gameOverScreen");
+const clearScreen = document.getElementById("clearScreen");
+
+let bgX = 0;
+let frame = 0;
+let gameInterval;
+let obstacles = [];
+
+const FPS = 8;
+const MOVE_SPEED = 8;
+const OBSTACLE_COUNT = 10;
+const OBSTACLE_SPACING = 350;
+
+let playerY = 150;
+let isJump = false;
+let isCrouch = false;
+
+// 初期画像
+player.style.backgroundImage = 'url("./img/idle.gif")';
+
+// ゲーム開始
+function startGame(){
+    startScreen.style.display="none";
+    gameOverScreen.style.display="none";
+    clearScreen.style.display="none";
+
+    resetGame();
+    generateObstacles();
+
+    gameInterval = setInterval(gameLoop,1000/FPS);  //１秒間に8回
+}
+
+// リセット
+function resetGame(){
+    bgX = 0;
+    frame = 0;
+    background.style.left="0px";
+    playerY = 150;
+    player.style.top = playerY + "px";
+
+    obstacles.forEach(o=>o.remove());
+    obstacles=[];
+}
+
+// 障害物生成
+function generateObstacles(){
+    for(let i=0;i<OBSTACLE_COUNT;i++){
+        const obs = document.createElement("div");
+        obs.classList.add("obstacle");
+        const x = 800 + i*OBSTACLE_SPACING + Math.random()*200;
+        const y = Math.random()>0.5 ? 220 : 100;
+        obs.style.left = x + "px";
+        obs.style.top = y + "px";
+        background.appendChild(obs);
+        obstacles.push(obs);
+    }
+}
+
+// メインループ
+function gameLoop(){
+    bgX -= MOVE_SPEED;
+    background.style.left = bgX + "px";
+
+    // 当たり判定
+    const playerRect = player.getBoundingClientRect();
+
+    for(let obs of obstacles){
+        const obsRect = obs.getBoundingClientRect();
+        if(isColliding(playerRect, obsRect)){
+            gameOver();
+        }
+    }
+
+    // クリア判定
+    if(Math.abs(bgX) >= 4500){
+        clearGame();
+    }
+}
+
+// 当たり判定
+function isColliding(a,b){
+    return !(
+        a.right < b.left ||
+        a.left > b.right ||
+        a.bottom < b.top ||
+        a.top > b.bottom
+    );
+}
+
+function gameOver(){
+    clearInterval(gameInterval);
+    gameOverScreen.style.display="flex";
+}
+
+function clearGame(){
+    clearInterval(gameInterval);
+    clearScreen.style.display="flex";
+}
+
+// キー操作
+document.addEventListener("keydown",e=>{
+    if(e.key==="ArrowUp"){
+        jump();
+    }
+    if(e.key==="ArrowDown"){
+        crouch();
+    }
+});
+
+document.addEventListener("keyup",e=>{
+    if(e.key==="ArrowDown"){
+        isCrouch=false;
+        player.style.backgroundImage='url("./img/move.gif")';
+        player.style.top="150px";
+    }
+});
+
+// ジャンプ
+function jump(){
+    if(isJump) return;
+    isJump=true;
+    player.style.backgroundImage='url("./img/move.gif")'; // ジャンプ中の画像を設定
+    player.style.top="50px";
+    setTimeout(()=>{
+        player.style.top="150px";
+        player.style.backgroundImage='url("./img/move.gif")';
+        isJump=false;
+    },500);
+}
+
+// しゃがみ
+function crouch(){
+    if(isCrouch) return;
+    isCrouch=true;
+    player.style.backgroundImage='url("./img/move.gif")'; // しゃがみ中の画像を設定
+    player.style.top="200px";
+}
+
+// タッチ操作
+let touchStartY=0;
+
+gameContainer.addEventListener("touchstart",e=>{
+    touchStartY = e.touches[0].clientY;
+});
+
+gameContainer.addEventListener("touchend",e=>{
+    let diff = e.changedTouches[0].clientY - touchStartY;
+    if(diff < -30){
+        jump();
+    }
+    if(diff > 30){
+        crouch();
+        setTimeout(()=>{
+            player.style.backgroundImage='url("img/idle.gif")';
+            player.style.top="150px";
+        },500);
+    }
+});
+
+function resizeGame(){
+    const wrapper = document.getElementById("gameWrapper");
+    const container = document.getElementById("gameContainer");
+
+    const scale = wrapper.clientWidth / 500;
+
+    container.style.transform = `scale(${scale})`;
+}
+
+window.addEventListener("resize", resizeGame);
+window.addEventListener("load", resizeGame);
+</script>
+
 </body>
 </html>
