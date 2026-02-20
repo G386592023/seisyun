@@ -33,7 +33,7 @@ body{
 
 #background{
     position:absolute;
-    width:5000px;
+    width:20000px;
     height:300px;
     background:url("./img/background.png") no-repeat;
     background-size:5000px 300px;
@@ -46,8 +46,15 @@ body{
     width:100px;
     height:150px;
     left:50px;
-    top:150px;
+    top:100px;
     background-size:cover;
+}
+
+#playerAtari{
+    width: 70px;
+    height: 100px;
+    background-color: rgba(255, 0, 0, 0.5);
+    margin: 45px 0px 0px 20px;
 }
 
 .obstacle{
@@ -84,7 +91,7 @@ button{
     <div id="gameContainer">
 
         <div id="background"></div>
-        <div id="player"></div>
+        <div id="player"><div id="playerAtari"></div></div>
 
         <!-- スタート画面 -->
         <div id="startScreen" class="screen">
@@ -109,6 +116,7 @@ button{
 
 <script>
 const player = document.getElementById("player");
+const playerAtari = document.getElementById("playerAtari");
 const background = document.getElementById("background");
 const gameContainer = document.getElementById("gameContainer");
 
@@ -126,7 +134,7 @@ const MOVE_SPEED = 8;
 const OBSTACLE_COUNT = 10;
 const OBSTACLE_SPACING = 350;
 
-let playerY = 150;
+let playerY = 100;
 let isJump = false;
 let isCrouch = false;
 
@@ -150,9 +158,11 @@ function resetGame(){
     bgX = 0;
     frame = 0;
     background.style.left="0px";
-    playerY = 150;
+    playerY = 100;
     player.style.top = playerY + "px";
 
+    const obst = document.querySelectorAll(".obstacle");
+    obst.forEach(o=>o.remove());
     obstacles.forEach(o=>o.remove());
     obstacles=[];
 }
@@ -163,11 +173,20 @@ function generateObstacles(){
         const obs = document.createElement("div");
         obs.classList.add("obstacle");
         const x = 800 + i*OBSTACLE_SPACING + Math.random()*200;
-        const y = Math.random()>0.5 ? 220 : 100;
+        const y = Math.random()>0.5 ? 200 : 100;
         obs.style.left = x + "px";
         obs.style.top = y + "px";
+
+        const atari = document.createElement("div");
+        atari.classList.add("atari");
+        atari.style.width = "20px";
+        atari.style.height = "20px";
+        atari.style.margin = 30 + "px";
+        atari.style.backgroundColor = "red";    // 当たり判定の位置確認用
+        
         background.appendChild(obs);
-        obstacles.push(obs);
+        obs.appendChild(atari);
+        obstacles.push(atari);
     }
 }
 
@@ -177,7 +196,7 @@ function gameLoop(){
     background.style.left = bgX + "px";
 
     // 当たり判定
-    const playerRect = player.getBoundingClientRect();
+    const playerRect = playerAtari.getBoundingClientRect();
 
     for(let obs of obstacles){
         const obsRect = obs.getBoundingClientRect();
@@ -222,33 +241,92 @@ document.addEventListener("keydown",e=>{
     }
 });
 
-document.addEventListener("keyup",e=>{
-    if(e.key==="ArrowDown"){
-        isCrouch=false;
-        player.style.backgroundImage='url("./img/move.gif")';
-        player.style.top="150px";
-    }
-});
+// document.addEventListener("keyup",e=>{
+//     if(e.key==="ArrowUp"){
+//         isJump=false;
+//         player.style.backgroundImage='url("./img/move.gif")';
+//         player.style.top="100px";
+//     }
+//     if(e.key==="ArrowDown"){
+//         isCrouch=false;
+//         player.style.backgroundImage='url("./img/move.gif")';
+//         player.style.top="100px";
+//     }
+// });
 
 // ジャンプ
 function jump(){
     if(isJump) return;
-    isJump=true;
-    player.style.backgroundImage='url("./img/move.gif")'; // ジャンプ中の画像を設定
-    player.style.top="50px";
-    setTimeout(()=>{
-        player.style.top="150px";
-        player.style.backgroundImage='url("./img/move.gif")';
-        isJump=false;
-    },500);
+    isJump = true;
+
+    player.style.backgroundImage='url("./img/move.gif")';
+
+    let targetUp = 50;     // 上昇目標
+    let targetDown = 100;  // 着地位置
+
+    function goUp(){
+        if(playerY > targetUp){
+            playerY -= 3;
+            player.style.top = playerY + "px";
+            requestAnimationFrame(goUp);
+        }else{
+            setTimeout(jumpDirey,2500); // 頂点で少し待ってから降下
+            // requestAnimationFrame(goDown);
+        }
+    }
+
+    function jumpDirey(){
+        requestAnimationFrame(goDown);
+    }
+
+    function goDown(){
+        if(playerY < targetDown){
+            playerY += 3;
+            player.style.top = playerY + "px";
+            requestAnimationFrame(goDown);
+        }else{
+            isJump = false;
+        }
+    }
+
+    goUp();
 }
 
 // しゃがみ
 function crouch(){
     if(isCrouch) return;
-    isCrouch=true;
+    isCrouch = true;
+
     player.style.backgroundImage='url("./img/move.gif")'; // しゃがみ中の画像を設定
-    player.style.top="200px";
+
+    let targetUp = 150;     // 下降目標
+    let targetDown = 100;  // 戻り位置
+
+    function crouchDown(){
+        if(playerY < targetUp){
+            playerY += 3;
+            player.style.top = playerY + "px";
+            requestAnimationFrame(crouchDown);
+        }else{
+            setTimeout(crouchDirey,2500); // 頂点で少し待ってから降下
+        }
+    }
+
+    function crouchDirey(){
+        requestAnimationFrame(crouchUp);
+    }
+
+    function crouchUp(){
+        if(playerY > targetDown){
+            playerY -= 3;
+            player.style.top = playerY + "px";
+            requestAnimationFrame(crouchUp);
+        }else{
+            isCrouch = false;
+        }
+    }
+
+    crouchDown();
 }
 
 // タッチ操作
@@ -262,13 +340,17 @@ gameContainer.addEventListener("touchend",e=>{
     let diff = e.changedTouches[0].clientY - touchStartY;
     if(diff < -30){
         jump();
+        setTimeout(()=>{
+            player.style.backgroundImage='url("img/move.gif")';
+            player.style.top="100px";
+        },1000);
     }
     if(diff > 30){
         crouch();
         setTimeout(()=>{
-            player.style.backgroundImage='url("img/idle.gif")';
-            player.style.top="150px";
-        },500);
+            player.style.backgroundImage='url("img/move.gif")';
+            player.style.top="100px";
+        },1000);
     }
 });
 
