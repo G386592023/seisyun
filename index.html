@@ -438,8 +438,8 @@ function resizeGame(){
     // const wrapper = document.getElementById("gameWrapper");
     const container = document.getElementById("gameContainer");
 
-    const scaleX = window.innerWidth / 500;
-    const scaleY = window.innerHeight / 300;
+    const scaleX = (window.innerWidth - 20) / 500;
+    const scaleY = (window.innerHeight - 20) / 300;
 
     const scale = Math.min(scaleX, scaleY);
     container.style.transform = `scale(${scale})`;
