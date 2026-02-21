@@ -5,13 +5,6 @@
 <title>オオモモアケ</title>
 
 <style>
-html, body{
-    margin:0;
-    padding:0;
-    overflow:hidden;          /* 画面スクロール禁止 */
-    touch-action:none;        /* デフォルトのタッチ動作を無効化 */
-}
-
 body{
     margin:0;
     background:#e6e6e6;
@@ -41,6 +34,7 @@ body{
     position:relative;
     transform-origin:top left;
     /* background:black; */
+    touch-action: none;
 }
 
 #background{
@@ -110,7 +104,8 @@ button{
     padding:10px 20px;
     margin-top: 110px;
     cursor:pointer;
-        z-index:10;
+    z-index:10;
+    touch-action: auto;
 
 }
 
@@ -165,6 +160,7 @@ let bgX = 0;
 let frame = 0;
 let gameInterval;
 let obstacles = [];
+let isPlaying = false;
 
 const FPS = 8;
 const MOVE_SPEED = 8;
@@ -194,6 +190,7 @@ function startGame(){
 
 // リセット
 function resetGame(){
+    isPlaying = true;
     bgX = 0;
     frame = 0;
     background.style.left="0px";
@@ -261,6 +258,7 @@ function isColliding(a,b){
 }
 
 function gameOver(){
+    isPlaying = false;
     clearInterval(gameInterval);
     gameOverScreen.style.display="flex";
     player.style.backgroundImage = 'none';
@@ -404,16 +402,19 @@ function crouch(){
 let touchStartY=0;
 
 gameContainer.addEventListener("touchstart",e=>{
+    if(!isPlaying) return;
     e.preventDefault();
     touchStartY = e.touches[0].clientY;
 }, {passive:false});
 
 gameContainer.addEventListener("touchmove", e=>{
+    if(!isPlaying) return;
     e.preventDefault();   // スクロール防止
 }, { passive:false });
 
 
 gameContainer.addEventListener("touchend",e=>{
+    if(!isPlaying) return;
     e.preventDefault();
 
     let diff = e.changedTouches[0].clientY - touchStartY;
