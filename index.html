@@ -435,11 +435,13 @@ gameContainer.addEventListener("touchend",e=>{
 }, { passive:false });
 
 function resizeGame(){
-    const wrapper = document.getElementById("gameWrapper");
+    // const wrapper = document.getElementById("gameWrapper");
     const container = document.getElementById("gameContainer");
 
-    const scale = wrapper.clientWidth / 500;
+    const scaleX = window.innerWidth / 500;
+    const scaleY = window.innerHeight / 300;
 
+    const scale = Math.min(scaleX, scaleY);
     container.style.transform = `scale(${scale})`;
 }
 
