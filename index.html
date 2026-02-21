@@ -22,8 +22,6 @@ body{
 }
 
 #gameWrapper{
-    width:80vw;
-    height:calc(80vw * 0.6); /* 300/500 = 0.6 */
     display:flex;
     overflow:hidden;
 }
@@ -435,14 +433,25 @@ gameContainer.addEventListener("touchend",e=>{
 }, { passive:false });
 
 function resizeGame(){
-    // const wrapper = document.getElementById("gameWrapper");
+    const wrapper = document.getElementById("gameWrapper");
+    if(window.innerWidth*3 < window.innerHeight*5){  // 画面が縦長すぎる場合は幅を基準にする
+        wrapper.style.width = "80vw";
+        wrapper.style.height = "calc(80vw * 0.6)";  /* 300/500 = 0.6 */
+    }else{
+        wrapper.style.height = "80vh";
+        wrapper.style.width = "calc(80vh * (5/3))";  /* 500/300 = 5/3 */
+    }
+
     const container = document.getElementById("gameContainer");
 
-    const scaleX = (window.innerWidth - 20) / 500;
-    const scaleY = (window.innerHeight - 20) / 300;
+    const scaleX = (wrapper.clientWidth ) / 500;
+    const scaleY = (wrapper.clientHeight ) / 300;
+    // const scale = wrapper.clientWidth / 500;
+
 
     const scale = Math.min(scaleX, scaleY);
     container.style.transform = `scale(${scale})`;
+
 }
 
 window.addEventListener("resize", resizeGame);
