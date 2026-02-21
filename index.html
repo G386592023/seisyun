@@ -420,17 +420,17 @@ gameContainer.addEventListener("touchend",e=>{
     let diff = e.changedTouches[0].clientY - touchStartY;
     if(diff < -30){
         jump();
-        setTimeout(()=>{
-            player.style.backgroundImage='url("img/move.gif")';
-            player.style.top="100px";
-        },1000);
+        // setTimeout(()=>{
+        //     player.style.backgroundImage='url("img/move.gif")';
+        //     player.style.top="100px";
+        // },1000);
     }
     if(diff > 30){
         crouch();
-        setTimeout(()=>{
-            player.style.backgroundImage='url("img/move.gif")';
-            player.style.top="100px";
-        },1000);
+        // setTimeout(()=>{
+        //     player.style.backgroundImage='url("img/move.gif")';
+        //     player.style.top="100px";
+        // },1000);
     }
 }, { passive:false });
 
