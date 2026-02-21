@@ -270,12 +270,13 @@ function clearGame(){
     clearInterval(gameInterval);
 
     inputName();
-    
+}
+
+function showClearScreen(){
     clearScreen.style.display="flex";
 
     // まず黒くする（暗転）
     clearScreen.style.background="rgba(0,0,0,0.9)";
-
     // ending画像設定
     clearScreen.style.backgroundImage="url('./img/ending.png')";
     clearScreen.style.backgroundSize="cover";
@@ -285,7 +286,6 @@ function clearGame(){
     setTimeout(()=>{
         clearScreen.style.opacity="1";
     },50);
-
 
     const clearText = document.createElement("div");
     clearScreen.appendChild(clearText);
@@ -308,9 +308,13 @@ function clearGame(){
 function inputName(){
   let name = window.prompt("名前を入力すると、クリア画面を表示します", "");
   if (name == null || name == "") {
-    startGame();
+    alert("名前が入力されなかったため、スタート画面へ戻ります");
+    clearScreen.style.display="none";
+    startScreen.style.display="flex";
+    player.style.backgroundImage = 'none';
   } else {
     saveScore(name);
+    showClearScreen();
   }
 }
 // Google Sheetsへのデータの保存
