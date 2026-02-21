@@ -5,6 +5,13 @@
 <title>オオモモアケ</title>
 
 <style>
+html, body{
+    margin:0;
+    padding:0;
+    overflow:hidden;          /* 画面スクロール禁止 */
+    touch-action:none;        /* デフォルトのタッチ動作を無効化 */
+}
+
 body{
     margin:0;
     background:#e6e6e6;
@@ -397,10 +404,18 @@ function crouch(){
 let touchStartY=0;
 
 gameContainer.addEventListener("touchstart",e=>{
+    e.preventDefault();
     touchStartY = e.touches[0].clientY;
-});
+}, {passive:false});
+
+gameContainer.addEventListener("touchmove", e=>{
+    e.preventDefault();   // スクロール防止
+}, { passive:false });
+
 
 gameContainer.addEventListener("touchend",e=>{
+    e.preventDefault();
+
     let diff = e.changedTouches[0].clientY - touchStartY;
     if(diff < -30){
         jump();
@@ -416,7 +431,7 @@ gameContainer.addEventListener("touchend",e=>{
             player.style.top="100px";
         },1000);
     }
-});
+}, { passive:false });
 
 function resizeGame(){
     const wrapper = document.getElementById("gameWrapper");
