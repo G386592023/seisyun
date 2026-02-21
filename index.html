@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-<meta charset="UTF-8">
-<title>オオモモアケ</title>
+    <meta charset="UTF-8">
+    <title>オオモモアケ</title>
 
 <style>
 body{
@@ -154,6 +154,9 @@ const startScreen = document.getElementById("startScreen");
 const gameOverScreen = document.getElementById("gameOverScreen");
 const clearScreen = document.getElementById("clearScreen");
 
+// Google Sheetsへのデータの保存
+const url = "https://script.google.com/macros/s/AKfycbzj453ivWq0Z6Qyx63XFDBq8mPd3g8IwPkllW6quE9iVF5LkfPwDh9QxJEJeLH1dqA/exec";
+
 let bgX = 0;
 let frame = 0;
 let gameInterval;
@@ -213,9 +216,9 @@ function generateObstacles(){
 
         const atari = document.createElement("div");
         atari.classList.add("atari");
-        atari.style.width = "50px";
-        atari.style.height = "50px";
-        atari.style.margin = 15 + "px";
+        atari.style.width = "70px";
+        atari.style.height = "70px";
+        atari.style.margin = 5 + "px";
         // atari.style.backgroundColor = "red";    // 当たり判定の位置確認用
         
         background.appendChild(obs);
@@ -263,7 +266,11 @@ function gameOver(){
 }
 
 function clearGame(){
+    isPlaying = false;
     clearInterval(gameInterval);
+
+    inputName();
+    
     clearScreen.style.display="flex";
 
     // まず黒くする（暗転）
@@ -298,6 +305,25 @@ function clearGame(){
     },2000);
 }
 
+function inputName(){
+  let name = window.prompt("名前を入力すると、クリア画面を表示します", "");
+  if (name == null || name == "") {
+    startGame();
+  } else {
+    saveScore(name);
+  }
+}
+// Google Sheetsへのデータの保存
+async function saveScore (name) {
+  const request = {
+    method: "POST"
+  };
+  let newUrl = url + "?name=" + name;
+  const response = await fetch(newUrl, request);
+  console.log("成功！　" + response);  //確認
+}
+
+
 // キー操作
 document.addEventListener("keydown",e=>{
     if(e.key==="ArrowUp"){
@@ -307,19 +333,6 @@ document.addEventListener("keydown",e=>{
         crouch();
     }
 });
-
-// document.addEventListener("keyup",e=>{
-//     if(e.key==="ArrowUp"){
-//         isJump=false;
-//         player.style.backgroundImage='url("./img/move.gif")';
-//         player.style.top="100px";
-//     }
-//     if(e.key==="ArrowDown"){
-//         isCrouch=false;
-//         player.style.backgroundImage='url("./img/move.gif")';
-//         player.style.top="100px";
-//     }
-// });
 
 // ジャンプ
 function jump(){
@@ -418,17 +431,9 @@ gameContainer.addEventListener("touchend",e=>{
     let diff = e.changedTouches[0].clientY - touchStartY;
     if(diff < -30){
         jump();
-        // setTimeout(()=>{
-        //     player.style.backgroundImage='url("img/move.gif")';
-        //     player.style.top="100px";
-        // },1000);
     }
     if(diff > 30){
         crouch();
-        // setTimeout(()=>{
-        //     player.style.backgroundImage='url("img/move.gif")';
-        //     player.style.top="100px";
-        // },1000);
     }
 }, { passive:false });
 
@@ -447,7 +452,6 @@ function resizeGame(){
     const scaleX = (wrapper.clientWidth ) / 500;
     const scaleY = (wrapper.clientHeight ) / 300;
     // const scale = wrapper.clientWidth / 500;
-
 
     const scale = Math.min(scaleX, scaleY);
     container.style.transform = `scale(${scale})`;
