@@ -7,19 +7,24 @@
 <style>
 body{
     margin:0;
-    background:#222;
+    background:#e6e6e6;
     display:flex;
     justify-content:center;
     align-items:center;
     height:100vh;
 }
 
+#rule{
+    position:absolute;
+    top:10px;
+    font-size:10px;
+    color:rgb(50, 43, 75);
+}
+
 #gameWrapper{
     width:80vw;
     height:calc(80vw * 0.6); /* 300/500 = 0.6 */
     display:flex;
-    /* justify-content:center;
-    align-items:center; */
     overflow:hidden;
 }
 
@@ -36,7 +41,7 @@ body{
     width:20000px;
     height:300px;
     background:url("./img/background.png") no-repeat;
-    background-size:5000px 300px;
+    background-size:20000px 300px;
     left:0;
     top:0;
 }
@@ -53,8 +58,11 @@ body{
 #playerAtari{
     width: 70px;
     height: 100px;
-    background-color: rgba(255, 0, 0, 0.5);
     margin: 45px 0px 0px 20px;
+
+    /* 当たり判定の位置確認用 */
+    /* background-color: rgba(255, 0, 0, 0.5); */
+
 }
 
 .obstacle{
@@ -65,11 +73,17 @@ body{
     background-size:contain;
 }
 
+#clearScreen{
+    z-index:10;
+    opacity:0;
+    transition: opacity 2s ease, background 2s ease;
+}
+
 .screen{
     position:absolute;
     width:100%;
     height:100%;
-    background:rgba(0,0,0,0.7);
+    background:rgba(50, 43, 75, 0.3);
     display:flex;
     justify-content:center;
     align-items:center;
@@ -79,14 +93,29 @@ body{
 }
 
 button{
-    padding:10px 20px;
-    font-size:18px;
+    width: 133px;
+    height: 46px;
+    border:0;
+    line-height:0;
+    overflow:visible;
     cursor:pointer;
+    background:url("./img/button.png") no-repeat;
+    padding:10px 20px;
+    margin-top: 110px;
+    cursor:pointer;
+        z-index:10;
+
+}
+
+button:hover{
+    background:url("./img/button_hover.png") no-repeat;
 }
 </style>
 </head>
 
 <body>
+<div id="rule">PC操作：矢印キー（↑↓）上昇/下降　スマホ操作：上下スライド 上昇/下降</div>
+
 <div id="gameWrapper">
     <div id="gameContainer">
 
@@ -95,20 +124,21 @@ button{
 
         <!-- スタート画面 -->
         <div id="startScreen" class="screen">
-            <h1>START</h1>
-            <button onclick="startGame()">Start</button>
+            <!-- <h1>START</h1> -->
+             <img src="./img/title.png" style="position:absolute">
+            <button onclick="startGame()"></button>
         </div>
 
         <!-- ゲームオーバー -->
         <div id="gameOverScreen" class="screen" style="display:none;">
-            <h1>GAME OVER</h1>
-            <button onclick="startGame()">Replay</button>
+             <img src="./img/title.png" style="position:absolute">
+            <button onclick="startGame()"></button>
         </div>
 
         <!-- クリア -->
         <div id="clearScreen" class="screen" style="display:none;">
-            <h1>CLEAR!</h1>
-            <button onclick="startGame()">Replay</button>
+            <!-- <h1>CLEAR!</h1>
+            <button onclick="startGame()">Replay</button> -->
         </div>
 
     </div>
@@ -131,7 +161,7 @@ let obstacles = [];
 
 const FPS = 8;
 const MOVE_SPEED = 8;
-const OBSTACLE_COUNT = 10;
+const OBSTACLE_COUNT = 55;
 const OBSTACLE_SPACING = 350;
 
 let playerY = 100;
@@ -149,6 +179,8 @@ function startGame(){
 
     resetGame();
     generateObstacles();
+
+    player.style.backgroundImage = 'url("./img/move.gif")';
 
     gameInterval = setInterval(gameLoop,1000/FPS);  //１秒間に8回
 }
@@ -172,17 +204,17 @@ function generateObstacles(){
     for(let i=0;i<OBSTACLE_COUNT;i++){
         const obs = document.createElement("div");
         obs.classList.add("obstacle");
-        const x = 800 + i*OBSTACLE_SPACING + Math.random()*200;
+        const x = 800 + i*OBSTACLE_SPACING + Math.random()*200; // 800px以降に等間隔で配置、少しランダム要素も
         const y = Math.random()>0.5 ? 200 : 100;
         obs.style.left = x + "px";
         obs.style.top = y + "px";
 
         const atari = document.createElement("div");
         atari.classList.add("atari");
-        atari.style.width = "20px";
-        atari.style.height = "20px";
-        atari.style.margin = 30 + "px";
-        atari.style.backgroundColor = "red";    // 当たり判定の位置確認用
+        atari.style.width = "50px";
+        atari.style.height = "50px";
+        atari.style.margin = 15 + "px";
+        // atari.style.backgroundColor = "red";    // 当たり判定の位置確認用
         
         background.appendChild(obs);
         obs.appendChild(atari);
@@ -206,7 +238,7 @@ function gameLoop(){
     }
 
     // クリア判定
-    if(Math.abs(bgX) >= 4500){
+    if(Math.abs(bgX) >= 19500){  
         clearGame();
     }
 }
@@ -224,11 +256,43 @@ function isColliding(a,b){
 function gameOver(){
     clearInterval(gameInterval);
     gameOverScreen.style.display="flex";
+    player.style.backgroundImage = 'none';
 }
 
 function clearGame(){
     clearInterval(gameInterval);
     clearScreen.style.display="flex";
+
+    // まず黒くする（暗転）
+    clearScreen.style.background="rgba(0,0,0,0.9)";
+
+    // ending画像設定
+    clearScreen.style.backgroundImage="url('./img/ending.png')";
+    clearScreen.style.backgroundSize="cover";
+    clearScreen.style.backgroundPosition="center";
+
+    // 少し遅らせてフェードイン
+    setTimeout(()=>{
+        clearScreen.style.opacity="1";
+    },50);
+
+
+    const clearText = document.createElement("div");
+    clearScreen.appendChild(clearText);
+    // endingテキスト設定
+    clearText.style.position="flex";
+    clearText.style.backgroundImage="url('./img/ending_text.png')";
+    clearText.style.opacity="0";
+    clearText.style.backgroundSize="cover";
+    clearText.style.backgroundPosition="center";
+    clearText.style.width="500px";
+    clearText.style.height="300px";
+    clearText.style.transition="opacity 2s ease, background 2s ease";
+
+    // 少し遅らせてフェードイン
+    setTimeout(()=>{
+        clearText.style.opacity="1";
+    },2000);
 }
 
 // キー操作
